@@ -1,12 +1,12 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-import openai
 import os
+from openai import OpenAI
 
 app = Flask(__name__)
 
-# ✅ Load OpenAI key from environment variable (do not hardcode)
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+# ✅ Load OpenAI key securely from environment variable
+client = OpenAI()
 
 @app.route("/bot", methods=['POST'])
 def bot():
@@ -25,17 +25,22 @@ def bot():
 def generate_reply(user_msg):
     try:
         prompt = f"You are a helpful assistant helping someone reply to a customer care message. Message: \"{user_msg}\". What is the best way to respond?"
-        response = openai.ChatCompletion.create(
+
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
             max_tokens=100,
             temperature=0.7,
         )
-        reply = response['choices'][0]['message']['content'].strip()
+
+        reply = response.choices[0].message.content.strip()
         return reply
+
     except Exception as e:
         print("Error with GPT:", e)
-        return "Sorry, I had trouble generating a reply."
+        return f"Sorry, GPT failed: {str(e)}"
 
 if __name__ == "__main__":
     app.run(port=5000)
