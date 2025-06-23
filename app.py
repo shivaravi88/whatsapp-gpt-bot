@@ -1,21 +1,22 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 import openai
+import os
 
 app = Flask(__name__)
 
-# 🔑 Your OpenAI GPT API key
-openai.api_key = 'your-openai-api-key-here'
+# ✅ Load OpenAI key from environment variable (do not hardcode)
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 @app.route("/bot", methods=['POST'])
 def bot():
     incoming_msg = request.values.get('Body', '').strip()
     print(f"User said: {incoming_msg}")
 
-    # Use GPT to generate a smart reply
+    # Generate GPT reply
     reply = generate_reply(incoming_msg)
 
-    # Send back via Twilio WhatsApp
+    # Send reply back to WhatsApp via Twilio
     resp = MessagingResponse()
     msg = resp.message()
     msg.body(reply)
